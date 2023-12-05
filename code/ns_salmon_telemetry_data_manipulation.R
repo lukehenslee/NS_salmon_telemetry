@@ -12,16 +12,7 @@
 
 # Load packages ################################################################
 library(tidyverse)
-library(data.table)
-library(tools)
-library(nlme)
-library(lme4)
-library(mclogit)
-library(MASS)
-library(VGAM)
-library(boot)
-library(mgcv)
-library(visreg)
+
 
 # Set working directory ########################################################
 setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
@@ -185,5 +176,5 @@ if(FALSE) {
   tags$yday <- yday(mdy(tags$capture.date))
   
 # Write file ####
-  write.csv(tags, 'data/tags_manipulated.csv', row.names = F)
+  # write.csv(tags, 'data/tags_manipulated.csv', row.names = F)
   

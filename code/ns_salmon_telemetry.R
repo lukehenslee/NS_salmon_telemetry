@@ -13,17 +13,9 @@
 
 # Load packages ################################################################
 library(tidyverse)
-library(data.table)
-library(tools)
-library(nlme)
-library(lme4)
-library(mclogit)
-library(MASS)
 library(VGAM)
 library(boot)
-library(mgcv)
-library(visreg)
-library(glmm)
+
 
 # Set working directory ########################################################
 setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")

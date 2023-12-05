@@ -1,0 +1,2 @@
+tag.ID,ymd.hms,lat,long,sex,species,stock
+factor,character,numeric,numeric,factor,factor,factor

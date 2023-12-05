@@ -12,20 +12,10 @@
 
 # Load packages ################################################################
 library(tidyverse)
-library(data.table)
-library(tools)
-library(nlme)
-library(lme4)
-library(mclogit)
-library(MASS)
 library(VGAM)
-library(boot)
-library(mgcv)
-library(showtext)
 library(visreg)
 library(extrafont)
 library(ggh4x)
-library(cowplot)
 library(patchwork)
 library(scales)
 
@@ -124,17 +114,63 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
   
   tags.deployed
   
-  ggsave(tags.deployed, file = "figs/tag_deployment_v2.png",  width = 21, height = 15, units = "cm", dpi = 300)
+  #ggsave(tags.deployed, file = "figs/tag_deployment_v2.png",  width = 21, height = 15, units = "cm", dpi = 300)
   
-# Figure 3, stock proportions ####
+  ## 2020 ####
+  tags.deployed.20 <- ggplot(subset(coho, year == '2020'), aes(x = stat.week, fill = tracked)) +
+    geom_bar() +
+    xlab('Statistical week') +
+    ylab('Tags deployed') +
+    labs(fill = 'Assigned to \nstock of origin') +
+    scale_fill_manual(values = c("#8DA0CB", "#FC8D62")) +
+    facet_grid(~ capture.loc, labeller = as_labeller(sd)) +
+    scale_y_continuous(expand = c(0,0, 0.01, 0), limits = c(0, 100), breaks = seq(0, 100, 25)) +
+    theme_classic() + 
+    #below are theme settings that provide unlimited control of your figure and can be a template for other figures
+    #set the size, spacing, and color for the y-axis and x-axis titles
+    theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+           axis.title.x = element_blank(), #element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+           #set the font type
+           text = element_text(family = "Times New Roman"),
+           #position the legend on the figure
+           #legend.position = 'bottom',
+           #adjust size of text for legend
+           legend.title = element_text(size = 14), 
+           legend.text = element_text(size = 14),
+           legend.background = element_blank(),
+           legend.box.background = element_rect(colour = "black"),
+           #change spacing between facets
+           panel.spacing.y = unit(2, "lines"),
+           #change faceted panel title size
+           strip.text = element_text(size = 14),
+           strip.switch.pad.grid = unit(0.2, "in"),
+           plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+           #set size of the tick marks for y-axis
+           axis.ticks.y = element_line(linewidth = 0.5),
+           #set size of the tick marks for x-axis
+           axis.ticks.x = element_line(linewidth = 0.5),
+           #adjust length of the tick marks
+           axis.ticks.length = unit(0.2,"cm"),
+           #set size and location of the tick labels for the y axis
+           axis.text.y = element_text(colour = "black", size = 14, angle = 0, vjust = 0.5, hjust = 1,
+                                      margin = margin(t = 0, r = 5, b = 0, l = 0)),
+           #set size and location of the tick labels for the x axis
+           axis.text.x = element_text(colour = "black", size = 14, angle = 0, vjust = 0, hjust = 0.5,
+                                      margin = margin(t = 5, r = 0, b = 0, l = 0)),
+           #set the axis size, color, and end shape
+           axis.line = element_line(colour = "black", linewidth = 0.5, lineend = "square"))
   
-  stock.prop <- ggplot(coho.fig.3, aes(x = year, fill = Stock)) +
-    geom_bar(position = 'fill') +
-    facet_wrap(~ capture.loc, labeller = as_labeller(sd)) +
-    scale_fill_manual(values = stock.pal) +
-    scale_y_continuous(expand = c(0,0,.025,0), limits = c(0, 1), breaks = seq(0, 1, .25)) +
-    xlab('Year') +
-    ylab('Stock membership proportion') +
+  tags.deployed.20
+  
+  ## 2021 ####
+  tags.deployed.21 <- ggplot(subset(coho, year == '2021'), aes(x = stat.week, fill = tracked)) +
+    geom_bar() +
+    xlab('Statistical week') +
+    ylab('Tags deployed') +
+    labs(fill = 'Assigned to \nstock of origin') +
+    scale_fill_manual(values = c("#8DA0CB", "#FC8D62")) +
+    facet_grid(~ capture.loc, labeller = as_labeller(sd)) +
+    scale_y_continuous(expand = c(0,0, 0.01, 0), limits = c(0, 75), breaks = seq(0, 75, 25)) +
     theme_classic() + 
     #below are theme settings that provide unlimited control of your figure and can be a template for other figures
     #set the size, spacing, and color for the y-axis and x-axis titles
@@ -142,8 +178,10 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
            axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
            #set the font type
            text = element_text(family = "Times New Roman"),
-           #adjust size of text for legend,
-           legend.title = element_text(size = 12),
+           #position the legend on the figure
+           legend.position = 'none',
+           #adjust size of text for legend
+           legend.title = element_text(size = 12), 
            legend.text = element_text(size = 12),
            legend.background = element_blank(),
            legend.box.background = element_rect(colour = "black"),
@@ -168,7 +206,67 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
            #set the axis size, color, and end shape
            axis.line = element_line(colour = "black", linewidth = 0.5, lineend = "square"))
   
+  tags.deployed.21
+  
+  ## patchwork and save ####
+  deploy.fig <- tags.deployed.20 + tags.deployed.21 + plot_annotation(tag_levels = 'A') +
+    plot_layout(guides = 'collect', nrow = 2) & 
+    theme(plot.tag = element_text(size = 16, face = 'bold'),
+          legend.background = element_blank(),
+          legend.box.background = element_rect(colour = "black"),
+          #legend.position = 'bottom',
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 14))
+  
+  deploy.fig
+  
+  ggsave(deploy.fig, file = "figs/fig_2/fig_2_v5.png",  width = 21, height = 15, units = "cm", dpi = 300)
+  
+# Figure 3, stock proportions ####
+  
+  stock.prop <- ggplot(coho.fig.3, aes(x = year, fill = Stock)) +
+    geom_bar(position = 'fill') +
+    facet_wrap(~ capture.loc, labeller = as_labeller(sd)) +
+    scale_fill_manual(values = stock.pal) +
+    scale_y_continuous(expand = c(0,0,.025,0), limits = c(0, 1), breaks = seq(0, 1, .25)) +
+    xlab('Year') +
+    ylab('Stock proportion') +
+    theme_classic() + 
+    #below are theme settings that provide unlimited control of your figure and can be a template for other figures
+    #set the size, spacing, and color for the y-axis and x-axis titles
+    theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+           axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+           #set the font type
+           text = element_text(family = "Times New Roman"),
+           #adjust size of text for legend,
+           legend.title = element_text(size = 14),
+           legend.text = element_text(size = 14),
+           legend.background = element_blank(),
+           legend.box.background = element_rect(colour = "black"),
+           #change spacing between facets
+           panel.spacing.y = unit(2, "lines"),
+           #change faceted panel title size
+           strip.text = element_text(size = 14),
+           strip.switch.pad.grid = unit(0.2, "in"),
+           plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+           #set size of the tick marks for y-axis
+           axis.ticks.y = element_line(linewidth = 0.5),
+           #set size of the tick marks for x-axis
+           axis.ticks.x = element_line(linewidth = 0.5),
+           #adjust length of the tick marks
+           axis.ticks.length = unit(0.2,"cm"),
+           #set size and location of the tick labels for the y axis
+           axis.text.y = element_text(colour = "black", size = 14, angle = 0, vjust = 0.5, hjust = 1,
+                                      margin = margin(t = 0, r = 5, b = 0, l = 0)),
+           #set size and location of the tick labels for the x axis
+           axis.text.x = element_text(colour = "black", size = 14, angle = 0, vjust = 0, hjust = 0.5,
+                                      margin = margin(t = 5, r = 0, b = 0, l = 0)),
+           #set the axis size, color, and end shape
+           axis.line = element_line(colour = "black", linewidth = 0.5, lineend = "square"))
+  
   stock.prop
+  
+  ggsave(stock.prop, file = "figs/fig_3/fig_3_v3.png",  width = 20, height = 13.33, units = "cm", dpi = 300)
   
   stock.prop.20 <- ggplot(subset(coho.fig.3, year == '2020'), aes(x = stat.week, fill = Stock)) +
     geom_bar(position = 'fill') +
@@ -260,10 +358,8 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
   
   stock.prop.fig
   
-  ggsave(stock.prop.fig, file = "figs/stock_prop_fig.png",  width = 40, height = 20, units = "cm", dpi = 300)
-  
-  
-  #ggsave(stock.prop, file = "figs/fig_3.png",  width = 20, height = 13.33, units = "cm", dpi = 300)
+  # ggsave(stock.prop.fig, file = "figs/stock_prop_fig.png",  width = 40, height = 20, units = "cm", dpi = 300)
+
   
   # Figure 4, model interpretation ####
   
@@ -453,7 +549,7 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
   
   mod.fig
   
-  ggsave(mod.fig, file = "figs/mod_fig_v2.png",  width = 32, height = 24, units = "cm", dpi = 300)
+  # ggsave(mod.fig, file = "figs/mod_fig_v2.png",  width = 32, height = 24, units = "cm", dpi = 300)
   
 # Figure 5, catch partitioning ####
   # Make subdistrict column
@@ -464,25 +560,24 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
     geom_col(aes(fill = Stock), position = 'fill') +
     facet_grid(~ capture.loc, scales = 'free', labeller = as_labeller(sd)) +
     xlab("") +
-    ylab('Stock membership proportion') +
+    ylab('Estimated stock proportion') +
     scale_fill_manual(values = col.pal) +
     #set the limits and tick breaks for the y-axis
     scale_y_continuous(expand = c(0,0, 0.01, 0)) +
+    scale_x_discrete(guide = guide_axis(angle = 90)) +
     #adjust the order of the legend, make new labels, and select the symbol colors
     #makes the figure background white without grid lines
     theme_classic() +
     #below are theme settings that provide unlimited control of your figure and can be a template for other figures
     #set the size, spacing, and color for the y-axis and x-axis titles
     theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
-           axis.title.x = element_blank(), #element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+           axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
            #set the font type
            #aspect.ratio = 1/3,
            text = element_text(family = "Times New Roman"),
            strip.text = element_text(size = 14),
-           #modify plot title, the B in this case
-           plot.title = element_text(face = "bold", family = "Arial"),
            #position the legend on the figure
-           legend.position = 'none',
+           #legend.position = 'none',
            #adjust size of text for legend
            #legend.text = element_text(size = 12),
            #margin for the plot
@@ -510,7 +605,7 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
     geom_col(aes(fill = Stock), position = 'fill') +
     facet_grid(~ capture.loc, scales = 'free', labeller = as_labeller(sd)) +
     xlab("Day of year of landing") +
-    ylab("Stock membership proportion") +
+    ylab("Estimated stock proportion") +
     scale_fill_manual(values = col.pal) +
     #set the limits and tick breaks for the y-axis
     scale_y_continuous(expand = c(0,0, 0.01, 0)) +
@@ -518,7 +613,6 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
     #adjust the order of the legend, make new labels, and select the symbol colors
     #makes the figure background white without grid lines
     theme_classic() +
-    
     #below are theme settings that provide unlimited control of your figure and can be a template for other figures
     #set the size, spacing, and color for the y-axis and x-axis titles
     theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
@@ -527,12 +621,10 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
            #aspect.ratio = 1/3,
            text = element_text(family = "Times New Roman"),
            strip.text = element_text(size = 14),
-           #modify plot title, the B in this case
-           plot.title = element_text(face = "bold", family = "Arial"),
            #position the legend on the figure
-           legend.position = 'none',
+           #legend.position = 'none',
            #adjust size of text for legend
-           legend.text = element_text(size = 12),
+           #legend.text = element_text(size = 14),
            #margin for the plot
            plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
            #set size of the tick marks for y-axis
@@ -555,9 +647,9 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
   ## 2020 and 2021 sum ####
   fig.part.sum <- ggplot(fig.dat, aes(x = as.factor(year), y = value, fill = Stock)) +
     geom_col(aes(fill = Stock), position = 'fill') +
-    facet_grid(~ Subdistrict, labeller = label_wrap_gen(width = 10)) +
+    facet_grid(~ Subdistrict, labeller = label_wrap_gen(width=10)) +
     xlab('Year') +
-    ylab('') +
+    ylab('Estimated stock proportion') +
     scale_fill_manual(values = col.pal) +
     #set the limits and tick breaks for the y-axis
     scale_y_continuous(expand = c(0,0, 0.01, 0)) +
@@ -577,9 +669,9 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
            #position the legend on the figure
            #legend.position = c(0.3,0.85),
            #adjust size of text for legend
-           legend.title = element_text(size = 12),
-           legend.text = element_text(size = 12),
-           #margin for the plot
+           #legend.position = 'none',
+           #legend.title = element_text(size = 14),
+           #legend.text = element_text(size = 14),
            plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
            #set size of the tick marks for y-axis
            axis.ticks.y = element_line(size = 0.5),
@@ -600,71 +692,21 @@ setwd("C:/Users/lhhenslee/Desktop/git_repo/salmon_telemetry")
   
   ## patchwork and save ####
   layout <- '
-  AAAC
-  BBBC
+  AAC
+  BBC
   '
   
-  fig.part <- wrap_elements(fig.part.20 + fig.part.21 + fig.part.sum +
-    plot_layout(guides = 'collect', design = layout, widths = unit(c(1, -1), c('null', 'null'))) + plot_annotation(tag_levels = 'A') & 
-    theme(plot.tag = element_text(size = 16, face = 'bold')))
+  fig.part <- fig.part.20 + fig.part.21 + fig.part.sum + plot_annotation(tag_levels = 'A') +
+    plot_layout(design = layout, guides = 'collect')  & 
+    theme(plot.tag = element_text(size = 16, face = 'bold'),
+          legend.background = element_blank(),
+          legend.box.background = element_rect(colour = "black"),
+          legend.position = 'bottom',
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 14))
   
   fig.part
   
-  ggsave(fig.part, file = "figs/fig_part_v10.png",  width = 40, height = 20, units = "cm", dpi = 300)
+   ggsave(fig.part, file = "figs/fig_5/fig_part_v17.png",  width = 40, height = 20, units = "cm", dpi = 300)
   
-  # Fig pub ####
-  # 
-  ggplot(fig.dat, aes(x = as.factor(julian.day), y = value, fill = Stock)) +
-    geom_col(aes(fill = Stock), position = 'fill') +
-    facet_grid(capture.loc~year, scales = 'free_x', labeller = as_labeller(sd)) +
-    xlab("Day of year of landing") +
-    ylab("Coho landed") +
-    scale_fill_manual(values = col.pal) +
-    #set the limits and tick breaks for the y-axis
-    scale_y_continuous () +
-    scale_x_discrete(guide = guide_axis(angle = 90)) +
-    #adjust the order of the legend, make new labels, and select the symbol colors
-    #makes the figure background white without grid lines
-    theme_classic() +
-    theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
-           axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
-           #set the font type
-           text = element_text(family = "Arial"),
-           #modify plot title, the B in this case
-           plot.title = element_text(face = "bold", family = "Times New Roman"),
-           #position the legend on the figure
-           
-           #adjust size of text for legend
-           
-           #margin for the plot
-           plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
-           strip.background = element_blank(),
-           strip.text = element_text(size = 14),
-           #set size of the tick marks for y-axis
-           axis.ticks.y = element_line(size = 0.5),
-           #set size of the tick marks for x-axis
-           axis.ticks.x = element_line(size = 0.5),
-           #adjust length of the tick marks
-           axis.ticks.length = unit(0.2,"cm"),
-           #set size and location of the tick labels for the y axis
-           axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
-                                      margin = margin(t = 0, r = 5, b = 0, l = 0)),
-           #set size and location of the tick labels for the x axis
-           axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
-                                      margin = margin(t = 5, r = 0, b = 0, l = 0)),
-           #set the axis size, color, and end shape
-           axis.line = element_line(colour = "black", size = 0.5, lineend = "square"),
-           panel.spacing.y = unit(1, 'lines'))
   
-  # ggsave(fig.part, file = "figs/partition.png", width = 19, height = 15, units = "cm", dpi = 300)
-  
-  # Visualize proportions
-  coho.fig.prop <- fig.dat
-
-  coho.fig.prop$value <- coho.fig.prop$value/coho.fig.prop$abundance
-  
-  ggplot(coho.fig.prop, aes(x = capture.loc, y = value, fill = Stock)) +
-    geom_col() +
-    facet_wrap(~year)
-
- 
